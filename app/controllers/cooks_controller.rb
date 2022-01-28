@@ -1,4 +1,6 @@
 class CooksController < ApplicationController
+  before_action :authenticate_user!, except: [:index]
+
   def new
     @cook = Cook.new
   end
@@ -14,18 +16,27 @@ class CooksController < ApplicationController
   def create
     @cook = Cook.new(cook_params)
     @cook.user_id = current_user.id
-    @cook.save
-    redirect_to cook_path(@cook)
+    if @cook.save
+      redirect_to cook_path(@cook)
+    else
+      render :new
+    end
   end
 
   def edit
     @cook = Cook.find(params[:id])
+    if @cook.user != current_user
+      redirect_to cooks_path, alert: '不正なアクセスです。'
+    end
   end
 
   def update
     @cook = Cook.find(params[:id])
-    @cook.update(cook_params)
-    redirect_to cook_path(@cook)
+    if @cook.update(cook_params)
+      redirect_to cook_path(@cook)
+    else
+      render :edit
+    end
   end
 
   def destroy
